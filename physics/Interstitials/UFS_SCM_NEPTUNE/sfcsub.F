@@ -480,14 +480,14 @@
      &,             fnvegc,fnvetc,fnsotc,fnsocc                         & 
      &,             fnvmnc,fnvmxc,fnslpc,fnabsc, fnalbc2
       real (kind=kind_io8) tsfclm(len), wetclm(len),   snoclm(len)      &
-     &,    zorclm(len), albclm(len,4), aisclm(len)                      &
-     &,    tg3clm(len), acnclm(len),   cnpclm(len)                      &
-     &,    cvclm (len), cvbclm(len),   cvtclm(len)                      &
-     &,    scvclm(len), tsfcl2(len),   vegclm(len)                      &
+     &, zorclm(len), albclm(len,4), aisclm(len)                         &
+     &, tg3clm(len), acnclm(len),   cnpclm(len)                         &
+     &, cvclm (len), cvbclm(len),   cvtclm(len)                         &
+     &, scvclm(len), tsfcl2(len),   vegclm(len)                         &
      &, vetclm(len), sotclm(len), socclm(len),alfclm(len,2), sliclm(len)&
-     &,    smcclm(len,lsoil), stcclm(len,lsoil)                         &
-     &,    sihclm(len), sicclm(len)                                     &
-     &,    vmnclm(len), vmxclm(len), slpclm(len), absclm(len)
+     &, smcclm(len,lsoil), stcclm(len,lsoil)                            &
+     &, sihclm(len), sicclm(len), siccl2(len), acncl2(len),aiscl2(len)  &
+     &, vmnclm(len), vmxclm(len), slpclm(len), absclm(len)
 !
 !  analyzed surface fields (last character 'a' or 'anl' indicate analysis)
 !
@@ -1140,9 +1140,9 @@
      &           fnvetc,fnsotc,fnsocc,                   
      &           fnvmnc,fnvmxc,fnslpc,fnabsc,
      &           tsfclm,tsfcl2,wetclm,snoclm,zorclm,albclm,aisclm,
-     &           tg3clm,cvclm ,cvbclm,cvtclm,
+     &           tg3clm,cvclm ,cvbclm,cvtclm,aiscl2,
      &           cnpclm,smcclm,stcclm,sliclm,scvclm,acnclm,vegclm,
-     &           vetclm,sotclm,socclm,alfclm,           
+     &           vetclm,sotclm,socclm,alfclm,acncl2,           
      &           vmnclm,vmxclm,slpclm,absclm,
      &           kpdtsf,kpdwet,kpdsno,kpdzor,kpdalb,kpdais,
      &           kpdtg3,kpdscv,kpdacn,kpdsmc,kpdstc,kpdveg,
@@ -1189,6 +1189,7 @@
         do i=1,len
          sihclm(i) = 3.0*aisclm(i)
          sicclm(i) = aisclm(i)
+         siccl2(i) = aiscl2(i)
           if(nint(slmskl(i)) == 0 .and. nint(glacir(i)) == 1            &
      &                            .and. sicclm(i) /= 1.0) then
             sicclm(i) = sicimx
@@ -1205,6 +1206,7 @@
         do i=1,len
          sihclm(i) = 3.0*acnclm(i)
          sicclm(i) = acnclm(i)
+         siccl2(i) = acncl2(i)
           if(nint(slmskw(i)) == 0 .and. nint(glacir(i)) == 1            &
      &                            .and. sicclm(i).ne.1.) then
             sicclm(i) = sicimx
@@ -2090,6 +2092,16 @@
         do i=1,len
           if(slianl(i) == 0.0) then
             tsffcs(i) = tsffcs(i) + (tsfclm(i) - tsfcl2(i))
+          endif
+        enddo
+      endif
+!
+!...   update annual cycle in the sic guess over water grids
+!
+      if (fh-deltsfc > -0.001 ) then
+        do i=1,len
+          if(nint(slmskl(i)) /= 1) then
+            sicfcs(i) = sicfcs(i) + (sicclm(i) - siccl2(i))
           endif
         enddo
       endif
@@ -5011,8 +5023,8 @@
       endif
 !
       if (me == 0) then
-      write(6,100) rtsfl,ralbl,raisl,rsnol,rsmcl,rzorl,rvegl
-  100 format('rtsfl,ralbl,raisl,rsnol,rsmcl,rzorl,rvegl=',10f7.3)
+      write(6,100) rtsfl,ralbl,raisl,rsnol,rsmcl,rzorl,rvegl,rsicl
+  100 format('rtsfl,ralbl,raisl,rsnol,rsmcl,rzorl,rvegl,rsicl=',11f7.3)
       write(6,101) rtsfs,ralbs,raiss,rsnos,rsmcs,rzors,rvegs,rsics
   101 format('rtsfs,ralbs,raiss,rsnos,rsmcs,rzors,rvegs,rsics=',11f7.3)
 
@@ -7061,9 +7073,9 @@ cjfe
      &                 fnvetc,fnsotc,fnsocc,                            &
      &                 fnvmnc,fnvmxc,fnslpc,fnabsc,                     &
      &                 tsfclm,tsfcl2,wetclm,snoclm,zorclm,albclm,aisclm,&
-     &                 tg3clm,cvclm ,cvbclm,cvtclm,                     &
+     &                 tg3clm,cvclm ,cvbclm,cvtclm,aiscl2,              &
      &                 cnpclm,smcclm,stcclm,sliclm,scvclm,acnclm,vegclm,&
-     &                 vetclm,sotclm,socclm,alfclm,                     &
+     &                 vetclm,sotclm,socclm,alfclm,acncl2,              &
      &                 vmnclm,vmxclm,slpclm,absclm,                     &
      &                 kpdtsf,kpdwet,kpdsno,kpdzor,kpdalb,kpdais,       &
      &                 kpdtg3,kpdscv,kpdacn,kpdsmc,kpdstc,kpdveg,       &
@@ -7095,8 +7107,8 @@ cjfe
      &,            fnvmnc,fnvmxc,fnslpc,fnabsc
       real (kind=kind_io8) tsfclm(len),tsfcl2(len),                     &
      &     wetclm(len),snoclm(len),                                     &
-     &     zorclm(len),albclm(len,4),aisclm(len),                       &
-     &     tg3clm(len),acnclm(len),                                     &
+     &     zorclm(len),albclm(len,4),aisclm(len),aiscl2(len),           &
+     &     tg3clm(len),acnclm(len),acncl2(len),                         &
      &     cvclm (len),cvbclm(len),cvtclm(len),                         &
      &     cnpclm(len),                                                 &
      &     smcclm(len,lsoil),stcclm(len,lsoil),                         &
@@ -7142,7 +7154,7 @@ cjfe
      &                     ais(:,:), acn(:,:),   scv(:,:), smc(:,:,:),
      &                     tg3(:),   alb(:,:,:), alf(:,:),
      &                     vet(:),   sot(:), soc(:),    tsf2(:),         
-     &                     veg(:,:), stc(:,:,:)
+     &                     veg(:,:), stc(:,:,:),acn2(:),ais2(:)
      &,                    vmn(:), vmx(:),  slp(:), absm(:)
 !
       integer mon1s, mon2s, sea1s, sea2s, sea1, sea2, hyr1, hyr2
@@ -7150,7 +7162,7 @@ cjfe
       data mon1s/0/, mon2s/0/, sea1s/0/, sea2s/0/
 !
       save first, tsf, sno, zor, wet,  ais, acn, scv, smc, tg3,
-     &     alb,   alf, vet, sot, soc,tsf2, veg, stc,                    
+     &     alb,   alf, vet, sot, soc, tsf2, acn2, ais2, veg, stc,                    
      &     vmn,   vmx, slp, absm,
      &     mon1s, mon2s, sea1s, sea2s, dayhf, k1, k2, m1, m2,
      &     landice_cat
@@ -7164,8 +7176,10 @@ cjfe
         wetclm(i) = 0.0
         zorclm(i) = 0.0
         aisclm(i) = 0.0
+        aiscl2(i) = 0.0
         tg3clm(i) = 0.0
         acnclm(i) = 0.0
+        acncl2(i) = 0.0
         cvclm(i)  = 0.0
         cvbclm(i) = 0.0
         cvtclm(i) = 0.0
@@ -7206,6 +7220,7 @@ cjfe
      &           scv(len,2), smc(len,lsoil,2),
      &           tg3(len),   alb(len,4,2),    alf(len,2),
      &           vet(len),   sot(len), soc(len),tsf2(len),  
+     &           ais2(len),  acn2(len),
 !clu [+1l] add vmn, vmx, slp, abs
      &           vmn(len),   vmx(len), slp(len), absm(len),
      &           veg(len,2), stc(len,lsoil,2))
@@ -7282,7 +7297,7 @@ cjfe
             tsfcl0(i) = wei1m * tsf(i,1) + wei2m * tsf(i,2)
           enddo
         endif
-      endif
+      endif       ! if (first)
 !
 !  compute current jy,jm,jd,jh of forecast and the day of the year
 !
@@ -7798,7 +7813,7 @@ cjfe
      &                                ' cover read in for mon=',mon
           endif
 
-        enddo
+          enddo         ! do nn = 1, 2
 !
       mon1s = mon1 ; mon2s = mon2 ; sea1s = sea1 ; sea2s = sea2
 !
@@ -7811,21 +7826,15 @@ cjfe
         first = .false.
       endif first_time
 !
-!     to get tsf climatology at the previous call to sfccycle
+!     to get tsf, ais and acn climatology at the previous call to sfccycle
 !
-!     if (fh-deltsfc >= 0.0) then
-        rjdayh = rjday - deltsfc/24.0
-!     else
-!       rjdayh = rjday
-!     endif
-!     if(lprnt) print *,' rjdayh=',rjdayh,' mon1=',mon1,' mon2='
-!    &,mon2,' mon1s=',mon1s,' mon2s=',mon2s,' k1=',k1,' k2=',k2
+      rjdayh = rjday - deltsfc/24.0
       if (rjdayh .ge. dayhf(mon1)) then
         if (mon2 .eq. 1) mon2 = 13
         wei1x = (dayhf(mon2)-rjdayh)/(dayhf(mon2)-dayhf(mon1))
         wei2x = 1.0 - wei1x
         if (mon2 .eq. 13) mon2 = 1
-      else
+      else         ! if ( rjdayh .lt. dayhf(mon1))
         rjdayh2 = rjdayh
         if (rjdayh .lt. dayhf(1)) rjdayh2 = rjdayh2 + 365.0
         if (mon1s .eq. mon1) then
@@ -7834,11 +7843,33 @@ cjfe
           k2  = k1
           k1  = mod(k2,2) + 1
           mon = mon1s
+!
+!  tsf
+!
           kpd7=-1
           call fixrdc(lugb,fntsfc,kpdtsf,kpd7,mon,slmskw,
      &               tsf(1,k1),len,iret
      &,              imsk, jmsk, slmskh, gaus,blno, blto
      &,              outlat, outlon, me)
+!
+!  ais or acn (ice)
+!
+          kpd7=-1
+          if(fnacnc(1:8).ne.'        ') then
+            call fixrdc(lugb,fnacnc,kpdacn,kpd7,mon,slmskw,
+     &                  acn(1,k1),len,iret
+     &,                 imsk, jmsk, slmskh, gaus,blno, blto
+     &,                 outlat, outlon, me)
+          elseif(fnaisc(1:8).ne.'        ') then
+            call fixrdc(lugb,fnaisc,kpdais,kpd7,mon,slmskw,
+     &                  ais(1,k1),len,iret
+     &,                 imsk, jmsk, slmskh, gaus,blno, blto
+     &,                 outlat, outlon, me)
+          else
+            write(6,*) 'FATAL ERROR: climatological ice cover'
+            write(6,*) 'file not given.'
+            call abort
+          endif
         endif
         mon2s = mon1s + 1
 !       if (mon2s .eq. 1) mon2s = 13
@@ -7847,6 +7878,8 @@ cjfe
         if (mon2s .eq. 13) mon2s = 1
         do i=1,len
           tsf2(i) = wei1x * tsf(i,k1) + wei2x * tsf(i,k2)
+          ais2(i) = wei1x * ais(i,k1) + wei2x * ais(i,k2)
+          acn2(i) = wei1x * acn(i,k1) + wei2x * acn(i,k2)
         enddo
       endif
 !
@@ -7947,7 +7980,7 @@ cjfe
                   ! points.  so for efficiency, don't have fixrdc try to
                   ! find a value at landice points as defined by the vet type (vet).
               allocate(slmask_noice(len))
-              slmask_noice = slmskl
+              slmask_noice=1.0
               do i = 1, len
                 if (nint(vet(i)) < 1 .or.
      &              nint(vet(i)) == landice_cat) then
@@ -7972,7 +8005,7 @@ cjfe
             call abort
           endif
 !
-!  sea ice
+!  sea ice at the current time t
 !
           kpd7 = -1
           if (fnacnc(1:8).ne.'        ') then
@@ -8104,6 +8137,8 @@ cjfe
         cvtclm(i) = 0.0
         cnpclm(i) = 0.0
         tsfcl2(i) = tsf2(i)
+        acncl2(i) = acn2(i)
+        aiscl2(i) = ais2(i)
       enddo
 !     if(lprnt) print *,' tsfclm=',tsfclm(iprnt),' wei1m=',wei1m
 !    &,' wei2m=',wei2m,' tsfk12=',tsf(iprnt,k1),tsf(iprnt,k2)
@@ -8117,6 +8152,10 @@ cjfe
         do i=1,len
           tsf2(i)   = wei1x * tsf(i,k1) + wei2x * tsf(i,k2)
           tsfcl2(i) = tsf2(i)
+          acn2(i)   = wei1x * acn(i,k1) + wei2x * acn(i,k2)
+          acncl2(i) = acn2(i)
+          ais2(i)   = wei1x * ais(i,k1) + wei2x * ais(i,k2)
+          aiscl2(i) = ais2(i)
         enddo
       endif
 !     if(lprnt) print *,' tsf2=',tsf2(iprnt),' wei1x=',wei1x
